@@ -13,7 +13,14 @@ GLfloat boardDepth = 0.1f;  // Initial depth of the board
 GLfloat boardXRotation = 0.0f; // Initial rotation around the X-axis
 GLfloat boardYRotation = 0.0f; // Initial rotation around the Y-axis
 GLfloat boardZRotation = 0.0f;
+GLfloat TransX = 0.0f;
+GLfloat TransY = 0.0f;
+GLfloat TransZ = 0.0f;
+
 bool isRGB = 0;
+bool isSpinY = 0;
+bool moveUp = 0;
+
 
 int brushSize = 3, screenHeight = 800;
 float red = 0.0, green = 0.0, blue = 0.0;
@@ -21,6 +28,7 @@ float red = 0.0, green = 0.0, blue = 0.0;
 // Function to draw the 3D monitor and stand
 void drawMonitor() {
     glPushMatrix();
+    glTranslatef(TransX, TransY, TransZ);
     glRotatef(boardYRotation, 0.0f, 1.0f, 0.0f); // Apply Y-axis rotation
     glRotatef(boardXRotation, 1.0f, 0.0f, 0.0f); // Apply X-axis rotation
     glRotatef(boardZRotation, 0.0f, 0.0f, 1.0f);
@@ -88,13 +96,23 @@ void drawMonitor() {
     glPopMatrix();
 }
 
-/*void SpinAround() {
-    while (isRGB) {
-        //boardYRotation++;
-        
+void SpinYAround() {
+    if (moveUp) {
+        TransY += 0.01;
+        TransX += 0.01;
+        if (TransY > 5.0) moveUp = 0;
     }
-    glutPostRedisplay;
-}*/
+    if (!moveUp) {
+        TransY -= 0.01;
+        TransX -= 0.01;
+        if (TransY < -5.0) moveUp = 1;
+    }
+
+    boardYRotation += 0.1;
+   if (boardYRotation > 360.0) boardYRotation -= 360.0;
+   glutPostRedisplay();
+}
+
 // Display callback function
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -133,16 +151,26 @@ void keyboard(unsigned char key, int x, int y) {
     switch (key) {
 
     case 'q':
-        isRGB = 1;
-        break;
-    case 'e':
-        isRGB = 0;
+        if (!isRGB)isRGB = 1;
+        else isRGB = 0;
         break;
     case 'z':
         boardZRotation += 5.0f; // Rotate board upward
         break;
     case 'x':
         boardZRotation -= 5.0f; // Rotate board upward
+        break;
+    case ' ':
+        if (isSpinY)
+        {
+            isSpinY = 0;
+            glutIdleFunc(NULL);
+        }
+        else
+        {
+            isSpinY = 1;
+            glutIdleFunc(SpinYAround);
+        }
         break;
 
     case 27: // Escape key
