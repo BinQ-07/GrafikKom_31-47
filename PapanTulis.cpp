@@ -1,6 +1,5 @@
 #define _USE_MATH_DEFINES 
-#define Spidol 2
-#define Penghapus 3
+
 
 #include <iostream>
 #include <GL/glew.h>
