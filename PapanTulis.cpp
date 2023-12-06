@@ -31,6 +31,7 @@ static int id = 0;
 bool isRGB = 0;
 bool isSpinY = 0;
 bool moveUp = 0;
+bool turnTexture = 0;
 
 GLfloat lightPosition[] = { 0.0f, 0.0f, -10.0f, 1.0f }; // Posisi awal lampu
 
@@ -45,7 +46,7 @@ void loadTextures()
     imageFile* image[1];
 
     // Load the image.
-    image[0] = getBMP("../../Textures/grass.bmp");
+    image[0] = getBMP("textures/josh.bmp");
 
     // Create texture object texture[0]. 
     glBindTexture(GL_TEXTURE_2D, texture[0]);
@@ -62,6 +63,70 @@ void loadTextures()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
+
+static void drawBox(GLfloat size, GLenum type)
+{
+    // Enable texture mapping
+    glEnable(GL_TEXTURE_2D);
+
+    // Bind the loaded texture
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    static GLfloat n[6][3] =
+    {
+      {-1.0, 0.0, 0.0},
+      {0.0, 1.0, 0.0},
+      {1.0, 0.0, 0.0},
+      {0.0, -1.0, 0.0},
+      {0.0, 0.0, 1.0},
+      {0.0, 0.0, -1.0}
+    };
+    static GLint faces[6][4] =
+    {
+      {0, 1, 2, 3},
+      {3, 2, 6, 7},
+      {7, 6, 5, 4},
+      {4, 5, 1, 0},
+      {5, 6, 2, 1},
+      {7, 4, 0, 3}
+    };
+
+    GLfloat v[8][3];
+    GLint i;
+    GLfloat texCoords[8][2] = {
+    {0.0, 0.0}, // v0
+    {1.0, 0.0}, // v1
+    {1.0, 1.0}, // v2
+    {0.0, 1.0}, // v3
+    {0.0, 0.0}, // v4
+    {1.0, 0.0}, // v5
+    {1.0, 1.0}, // v6
+    {0.0, 1.0}  // v7
+    };
+
+    v[0][0] = v[1][0] = v[2][0] = v[3][0] = -size / 2;
+    v[4][0] = v[5][0] = v[6][0] = v[7][0] = size / 2;
+    v[0][1] = v[1][1] = v[4][1] = v[5][1] = -size / 2;
+    v[2][1] = v[3][1] = v[6][1] = v[7][1] = size / 2;
+    v[0][2] = v[3][2] = v[4][2] = v[7][2] = -size / 2;
+    v[1][2] = v[2][2] = v[5][2] = v[6][2] = size / 2;
+
+    for (i = 5; i >= 0; i--) {
+        glBegin(type);
+        glNormal3fv(&n[i][0]);
+
+        // Loop through each vertex of the face
+        for (int j = 0; j < 4; j++) {
+            glTexCoord2fv(&texCoords[faces[i][j]][0]); // Set texture coordinates
+            glVertex3fv(&v[faces[i][j]][0]);
+        }
+
+        glEnd();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+}  
+
+
 
 void wrapTextures(GLfloat normalX, GLfloat normalY, GLfloat normalZ, float texMin, float texMax) {
     glBegin(GL_QUADS);
@@ -89,8 +154,7 @@ void drawMonitor() {
     glRotatef(boardXRotation, 1.0f, 0.0f, 0.0f); // Apply X-axis rotation
     glRotatef(boardZRotation, 0.0f, 0.0f, 1.0f);
 
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    wrapTextures(0.0f, 0.0f, 1.0f, 0.0, 1.0);
+    
     // Papan tulis
     if (isRGB) glColor4f((float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, 1.0f);
     else glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -98,7 +162,8 @@ void drawMonitor() {
 
     glTranslatef(0.0f, 0.0f, -(boardDepth / 2));
     glScalef(boardWidth, boardHeight, boardDepth);
-    glutSolidCube(1.0f);
+    //glutSolidCube(1.0f);
+    drawBox(1.0f, GL_QUADS);
     glPopMatrix();
 
     // Pinggiran bawah
@@ -288,6 +353,14 @@ void keyboard(unsigned char key, int x, int y) {
             glutIdleFunc(SpinYAround);
         }
         break;
+    case't':
+        if (turnTexture) {
+            turnTexture = 0;
+        }
+        else
+        {
+            turnTexture = 1;
+        }
 
     case 27: // Escape key
         exit(0);
@@ -339,7 +412,7 @@ int main(int argc, char** argv) {
     printInteraction();
     glutInit(&argc, argv);
 
-    glutInitContextVersion(4, 3);
+    //glutInitContextVersion(4, 3);
     glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
 
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -358,5 +431,5 @@ int main(int argc, char** argv) {
     setup();
 
     glutMainLoop();
-
+    return 0;
 }
